@@ -91,7 +91,7 @@
                                         <rect key="frame" x="0.0" y="0.0" width="100" height="100"/>
                                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                         <view key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center">
-                                            <rect key="frame" x="0.0" y="0.0" width="100" height="100"/>
+                                            <rect key="frame" x="0.0" y="0.0" width="50" height="50"/>
                                             <autoresizingMask key="autoresizingMask"/>
                                             <subviews>
                                                 <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="Lwo-F4-DLk">
@@ -152,9 +152,11 @@
                         <outlet property="labelNoImages" destination="55X-hf-Oh6" id="cq2-kM-3Ze"/>
                         <outlet property="mapView" destination="Xr1-6F-cwO" id="Vbg-KR-fwE"/>
                         <outlet property="newCollectionButton" destination="Xzb-gu-Cdo" id="nrZ-dB-Nqg"/>
+                        <outlet property="photoDownloader" destination="BF1-HG-kRC" id="oK4-xj-XkP"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="G0x-hG-JEk" userLabel="First Responder" sceneMemberID="firstResponder"/>
+                <customObject id="BF1-HG-kRC" customClass="PhotoDownlaoder" customModule="Virtual_Tourist" customModuleProvider="target"/>
             </objects>
             <point key="canvasLocation" x="1904.8" y="138.98050974512745"/>
         </scene>

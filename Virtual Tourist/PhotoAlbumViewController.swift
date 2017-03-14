@@ -11,6 +11,19 @@ import MapKit
 import CoreData
 import Foundation
 
+extension PhotoAlbumViewController : PinProtocol {
+  func downloadFinished(pin: Pin) {
+    let arrayPhoto = pin.photos?.array as! [Photo]
+    
+    let map = arrayPhoto.map() { p in
+      p.image != nil
+    }
+    
+    let completed = map.reduce(true) {$0 && $1}
+    newCollectionButton.isEnabled = completed
+  }
+}
+
 extension PhotoAlbumViewController : UICollectionViewDataSource {
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         return pin?.photos?.count ?? 0
@@ -20,10 +33,39 @@ extension PhotoAlbumViewController : UICollectionViewDataSource {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "Cell", for: indexPath) as! PhotoCollectionViewCell
         
         // Configure the cell
-        cell.photo = pin?.photos?.object(at: indexPath.row) as? Photo
+        let photo = pin?.photos?.object(at: indexPath.row) as? Photo
+        photo?.photoProtocol = cell
+        cell.photo = photo
         
         return cell
     }
+  
+}
+
+extension PhotoAlbumViewController : UICollectionViewDelegate {
+
+  func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+    print("selecionou imagem")
+    
+    let optionMenu = UIAlertController(title: nil, message: "Choose Option", preferredStyle: .actionSheet)
+    let deleteAction = UIAlertAction(title: "Delete", style: .default, handler: {
+      (alert: UIAlertAction!) -> Void in
+      let appDelegate = UIApplication.shared.delegate as! AppDelegate
+      let managedContext = appDelegate.persistentContainer.viewContext
+      if let photo = self.pin?.photos?.array[indexPath.row] as? Photo{
+        managedContext.delete(photo)
+        try! managedContext.save()
+      }
+      
+    })
+    let cancelAction = UIAlertAction(title: "Cancel", style: .cancel, handler: {
+      (alert: UIAlertAction!) -> Void in
+      
+    })
+    optionMenu.addAction(deleteAction)
+    optionMenu.addAction(cancelAction)
+    self.present(optionMenu, animated: true, completion: nil)
+  }
 }
 
 extension PhotoAlbumViewController: NSFetchedResultsControllerDelegate {
@@ -33,6 +75,7 @@ extension PhotoAlbumViewController: NSFetchedResultsControllerDelegate {
 }
 class PhotoAlbumViewController: UIViewController {
 
+    @IBOutlet var photoDownloader: PhotoDownlaoder!
     var pin : Pin?
     
     @IBOutlet weak var mapView: MKMapView!
@@ -59,11 +102,15 @@ class PhotoAlbumViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        
+      
+        pin?.pinProtocol = self
+      
         //1 set the location on map as a pin
         setThePinOnMap()
         
         loadThePhotos()
+      
+      
     }
     
     func setThePinOnMap() {
@@ -85,101 +132,19 @@ class PhotoAlbumViewController: UIViewController {
     func verifyIfThereArePhotosSaved() {
         collectionView.isHidden = (fetchedResultsController.fetchedObjects?.count ?? 0) == 0
         labelNoImages.isHidden = (fetchedResultsController.fetchedObjects?.count ?? 0) > 0
+      
+        if (fetchedResultsController.fetchedObjects?.count ?? 0) == 0 {
+            newCollectionAction(newCollectionButton)
+        }
     }
     
     
 
     @IBAction func newCollectionAction(_ sender: Any) {
-        guard let appDelegate =
-            UIApplication.shared.delegate as? AppDelegate else {
-                return
-        }
-        
-        let managedContext = appDelegate.persistentContainer.viewContext
-        for photo in fetchedResultsController.fetchedObjects! as [Photo] {
-            managedContext.delete(photo)
-        }
-
-        let baseURL = "https://api.flickr.com/services/rest/?&method=flickr.photos.search"
-        let apiString = "&api_key=e86a1f8a8d13068a4341545a51bea638"
-        let searchString = "&lat=\(pin!.latitude)&lon=\(pin!.longitude)"
-        let format = "&format=json"
-        
-        let session = URLSession.shared
-            let url = URL(string: baseURL + apiString + searchString + format)
-            
-            let task = session.dataTask(with: url!) { (data, response, error) in
-                
-            guard (error == nil) else {
-                print("There was an error with your request: \(error)")
-                return
-            }
-            
-            /* GUARD: Was there any data returned? */
-            guard let data = data else {
-                print("No data was returned by the request!")
-                return
-            }
-            
-            
-            var stringJson = String(data: data, encoding: .utf8)!
-            stringJson = (stringJson as NSString).replacingOccurrences(of: "jsonFlickrApi(", with: "")
-            stringJson = (stringJson as NSString).replacingOccurrences(of: "})", with: "}")
-                
-            let parsedResult : Dictionary<String, Any>
-            do {
-                let any = try JSONSerialization.jsonObject(with: stringJson.data(using: .utf8)!, options: .allowFragments)
-                parsedResult = any as! Dictionary<String, Any>
-                
-                let root  = parsedResult["photos"] as! Dictionary<String, Any>
-                let photosJson = root["photo"] as! [Dictionary<String, Any>]
-                
-                let max = (photosJson.count > 10) ? 10 : photosJson.count
-                for i in 0..<max {
-                    let photo = NSEntityDescription.insertNewObject(forEntityName: "Photo", into: managedContext) as! Photo
-                    
-                    //https://farm{farm-id}.staticflickr.com/{server-id}/{id}_{secret}.jpg
-                    let farm_id = photosJson[i]["farm"] as! Int
-                    let server_id = photosJson[i]["server"] as! String
-                    let id = photosJson[i]["id"] as! String
-                    let secret = photosJson[i]["secret"] as! String
-                    
-                    let stringUrlPhoto = "https://farm\(farm_id).staticflickr.com/\(server_id)/\(id)_\(secret).jpg"
-                    
-                    photo.url = stringUrlPhoto
-                    photo.startDownloadPhoto() { o in
-                        if o.image != nil {
-                            let managedContext = appDelegate.persistentContainer.viewContext
-                            do {
-                                try managedContext.save()
-                            } catch let error as NSError {
-                                print("Could not save. \(error), \(error.userInfo)")
-                            }
-
-                        }
-                    }
-                    photo.pin = self.pin
-                    self.pin?.addToPhotos(photo)
-                }
-                
-                do {
-                    try managedContext.save()
-                } catch let error as NSError {
-                    print("Could not save. \(error), \(error.userInfo)")
-                }
-
-                
-                
-            } catch let ex {
-                print(ex)
-                let userInfo = [NSLocalizedDescriptionKey : "Could not parse the data as JSON: '\(data)'"]
-            }
-                
-        }
-        
-        task.resume()
-        
-        
+      newCollectionButton.isEnabled = false
+      if let pin = pin {
+        photoDownloader.download(pin: pin)
+      }
     }
     
     /*

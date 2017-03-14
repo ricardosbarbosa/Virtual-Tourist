@@ -2,7 +2,7 @@
 //  Pin+CoreDataProperties.swift
 //  Virtual Tourist
 //
-//  Created by STI-UFPB on 13/03/17.
+//  Created by Ricardo Barbosa on 14/03/17.
 //  Copyright © 2017 STI-UFPB. All rights reserved.
 //
 
@@ -18,6 +18,8 @@ extension Pin {
 
     @NSManaged public var latitude: Double
     @NSManaged public var longitude: Double
+    @NSManaged public var page: Int16
+    @NSManaged public var pages: Int16
     @NSManaged public var photos: NSOrderedSet?
 
 }

@@ -9,6 +9,12 @@
 import UIKit
 import CoreData
 
+extension PhotoCollectionViewCell : PhotoProtocol {
+   func downloadFinished(photo: Photo) {
+     updateUI()
+  }
+}
+
 class PhotoCollectionViewCell: UICollectionViewCell {
     
     var photo : Photo? {
@@ -22,10 +28,16 @@ class PhotoCollectionViewCell: UICollectionViewCell {
     
     func updateUI() {
         if let image = photo?.image {
-            imageView.image = image
+          indicator.stopAnimating()
+          indicator.isHidden = true
+          imageView.image = image
+          imageView.isHidden = false
         }
         else {
-            indicator.startAnimating()
+          imageView.image = nil
+          imageView.isHidden = true
+          indicator.isHidden = false
+          indicator.startAnimating()
         }
     }
     

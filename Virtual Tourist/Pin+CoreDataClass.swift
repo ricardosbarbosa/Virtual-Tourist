@@ -10,11 +10,16 @@ import Foundation
 import CoreData
 import MapKit
 
+protocol PinProtocol {
+  func downloadFinished(pin: Pin)
+}
 public class Pin: NSManagedObject , MKAnnotation {
-    
+  
+    var pinProtocol : PinProtocol?
+  
     public var coordinate: CLLocationCoordinate2D {
         get {
-            return CLLocationCoordinate2DMake(latitude, longitude)
+            return CLLocationCoordinate2DMake(latitude , longitude)
         }
         set {
             self.latitude = newValue.latitude

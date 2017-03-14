@@ -22,6 +22,7 @@
 		5F5EC7E81E76C06B00B3A1AE /* Virtual_TouristTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F5EC7E71E76C06B00B3A1AE /* Virtual_TouristTests.swift */; };
 		5F5EC7F31E76C06B00B3A1AE /* Virtual_TouristUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F5EC7F21E76C06B00B3A1AE /* Virtual_TouristUITests.swift */; };
 		5F5EC8011E76C45800B3A1AE /* PhotoAlbumViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F5EC8001E76C45800B3A1AE /* PhotoAlbumViewController.swift */; };
+		844F8DEE1E7846900060C908 /* PhotoDownlaoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 844F8DED1E7846900060C908 /* PhotoDownlaoder.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -63,6 +64,7 @@
 		5F5EC7F21E76C06B00B3A1AE /* Virtual_TouristUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Virtual_TouristUITests.swift; sourceTree = "<group>"; };
 		5F5EC7F41E76C06B00B3A1AE /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		5F5EC8001E76C45800B3A1AE /* PhotoAlbumViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PhotoAlbumViewController.swift; sourceTree = "<group>"; };
+		844F8DED1E7846900060C908 /* PhotoDownlaoder.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PhotoDownlaoder.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -130,6 +132,7 @@
 				5F5EC7D11E76C06B00B3A1AE /* MapViewController.swift */,
 				5F5EC8001E76C45800B3A1AE /* PhotoAlbumViewController.swift */,
 				5F07120C1E76D93500F5AF50 /* PhotoCollectionViewCell.swift */,
+				844F8DED1E7846900060C908 /* PhotoDownlaoder.swift */,
 				5F5EC7D31E76C06B00B3A1AE /* Main.storyboard */,
 				5F5EC7D91E76C06B00B3A1AE /* Assets.xcassets */,
 				5F5EC7DB1E76C06B00B3A1AE /* LaunchScreen.storyboard */,
@@ -292,6 +295,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				5F3D5E051E76E41A003E2C13 /* Photo+CoreDataProperties.swift in Sources */,
+				844F8DEE1E7846900060C908 /* PhotoDownlaoder.swift in Sources */,
 				5F3D5E041E76E41A003E2C13 /* Photo+CoreDataClass.swift in Sources */,
 				5F5EC7D21E76C06B00B3A1AE /* MapViewController.swift in Sources */,
 				5F3D5E0E1E76E883003E2C13 /* Pin+CoreDataProperties.swift in Sources */,

@@ -10,8 +10,14 @@ import Foundation
 import CoreData
 import UIKit
 
+protocol PhotoProtocol {
+  func downloadFinished(photo: Photo)
+}
+
 public class Photo: NSManagedObject {
-    
+  
+    var photoProtocol : PhotoProtocol?
+  
     func startDownloadPhoto(completionHandler: @escaping (_ photo: Photo) -> Void) {
         
         let session = URLSession.shared
@@ -31,7 +37,8 @@ public class Photo: NSManagedObject {
             }
             
             self.image = UIImage(data: data)
-            
+            self.photoProtocol?.downloadFinished(photo: self)
+            self.pin?.pinProtocol?.downloadFinished(pin: self.pin!)
             completionHandler(self)
         }
         
