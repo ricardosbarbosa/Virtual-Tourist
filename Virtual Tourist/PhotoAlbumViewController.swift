@@ -25,25 +25,25 @@ extension PhotoAlbumViewController : PinProtocol {
 }
 
 extension PhotoAlbumViewController : UICollectionViewDataSource {
-    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return pin?.photos?.count ?? 0
-    }
+  func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+    return pin?.photos?.count ?? 0
+  }
+  
+  func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+    let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "Cell", for: indexPath) as! PhotoCollectionViewCell
     
-    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "Cell", for: indexPath) as! PhotoCollectionViewCell
-        
-        // Configure the cell
-        let photo = pin?.photos?.object(at: indexPath.row) as? Photo
-        photo?.photoProtocol = cell
-        cell.photo = photo
-        
-        return cell
-    }
+    // Configure the cell
+    let photo = pin?.photos?.object(at: indexPath.row) as? Photo
+    photo?.photoProtocol = cell
+    cell.photo = photo
+    
+    return cell
+  }
   
 }
 
 extension PhotoAlbumViewController : UICollectionViewDelegate {
-
+  
   func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
     print("selecionou imagem")
     
@@ -69,92 +69,80 @@ extension PhotoAlbumViewController : UICollectionViewDelegate {
 }
 
 extension PhotoAlbumViewController: NSFetchedResultsControllerDelegate {
-    func controller(_ controller: NSFetchedResultsController<NSFetchRequestResult>, didChange anObject: Any, at indexPath: IndexPath?, for type: NSFetchedResultsChangeType, newIndexPath: IndexPath?) {
-        collectionView.reloadData()
-    }
+  func controller(_ controller: NSFetchedResultsController<NSFetchRequestResult>, didChange anObject: Any, at indexPath: IndexPath?, for type: NSFetchedResultsChangeType, newIndexPath: IndexPath?) {
+    updateUI()
+  }
 }
 class PhotoAlbumViewController: UIViewController {
-
-    @IBOutlet var photoDownloader: PhotoDownlaoder!
-    var pin : Pin?
+  
+  @IBOutlet var photoDownloader: PhotoDownlaoder!
+  var pin : Pin?
+  
+  @IBOutlet weak var mapView: MKMapView!
+  @IBOutlet weak var collectionView: UICollectionView!
+  @IBOutlet weak var labelNoImages: UILabel!
+  @IBOutlet weak var newCollectionButton: UIButton!
+  
+  //MARK: Core Data
+  lazy var fetchedResultsController : NSFetchedResultsController<Photo> = {
     
-    @IBOutlet weak var mapView: MKMapView!
-    @IBOutlet weak var collectionView: UICollectionView!
-    @IBOutlet weak var labelNoImages: UILabel!
-    @IBOutlet weak var newCollectionButton: UIButton!
+    let appDelegate = UIApplication.shared.delegate as! AppDelegate
     
-    //MARK: Core Data
-    lazy var fetchedResultsController : NSFetchedResultsController<Photo> = {
-        
-        let appDelegate = UIApplication.shared.delegate as! AppDelegate
-        
-        let managedContext = appDelegate.persistentContainer.viewContext
-        
-        let fetchRequest = NSFetchRequest<Photo>(entityName: "Photo")
-        fetchRequest.predicate = NSPredicate(format: "pin == %@", self.pin!)
-        fetchRequest.sortDescriptors = []
-        
-        let fetchedResultsController = NSFetchedResultsController(fetchRequest: fetchRequest, managedObjectContext: managedContext, sectionNameKeyPath: nil, cacheName: nil)
-        fetchedResultsController.delegate = self
-        
-        return fetchedResultsController
-    }()
-
-    override func viewDidLoad() {
-        super.viewDidLoad()
-      
-        pin?.pinProtocol = self
-      
-        //1 set the location on map as a pin
-        setThePinOnMap()
-        
-        loadThePhotos()
-      
-      
+    let managedContext = appDelegate.persistentContainer.viewContext
+    
+    let fetchRequest = NSFetchRequest<Photo>(entityName: "Photo")
+    fetchRequest.predicate = NSPredicate(format: "pin == %@", self.pin!)
+    fetchRequest.sortDescriptors = []
+    
+    let fetchedResultsController = NSFetchedResultsController(fetchRequest: fetchRequest, managedObjectContext: managedContext, sectionNameKeyPath: nil, cacheName: nil)
+    fetchedResultsController.delegate = self
+    
+    return fetchedResultsController
+  }()
+  
+  override func viewDidLoad() {
+    super.viewDidLoad()
+    pin?.pinProtocol = self
+    if (pin?.photos?.count ?? 0) == 0 {
+      newCollectionAction(newCollectionButton)
     }
-    
-    func setThePinOnMap() {
-        if let pin = pin {
-            mapView.addAnnotation(pin)
-            mapView.setCenter(pin.coordinate, animated: true)
-        }
+    setThePinOnMap()
+    updateUI()
+  }
+  
+  func updateUI() {
+    collectionView.reloadData()
+    labelNoImages.isHidden = (fetchedResultsController.fetchedObjects?.count ?? 0) > 0
+    do {
+      try fetchedResultsController.performFetch()
+    } catch let error as NSError {
+      print(error)
     }
-    
-    func loadThePhotos() {
-        do {
-            try fetchedResultsController.performFetch()
-            verifyIfThereArePhotosSaved()
-        } catch let error as NSError {
-            print(error)
-        }
+  }
+  
+  func setThePinOnMap() {
+    if let pin = pin {
+      mapView.addAnnotation(pin)
+      mapView.setCenter(pin.coordinate, animated: true)
     }
-    
-    func verifyIfThereArePhotosSaved() {
-        collectionView.isHidden = (fetchedResultsController.fetchedObjects?.count ?? 0) == 0
-        labelNoImages.isHidden = (fetchedResultsController.fetchedObjects?.count ?? 0) > 0
-      
-        if (fetchedResultsController.fetchedObjects?.count ?? 0) == 0 {
-            newCollectionAction(newCollectionButton)
-        }
+  }
+  
+  
+  @IBAction func newCollectionAction(_ sender: Any) {
+    newCollectionButton.isEnabled = false
+    if let pin = pin {
+      photoDownloader.download(pin: pin)
     }
-    
-    
-
-    @IBAction func newCollectionAction(_ sender: Any) {
-      newCollectionButton.isEnabled = false
-      if let pin = pin {
-        photoDownloader.download(pin: pin)
-      }
-    }
-    
-    /*
-    // MARK: - Navigation
-
-    // In a storyboard-based application, you will often want to do a little preparation before navigation
-    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        // Get the new view controller using segue.destinationViewController.
-        // Pass the selected object to the new view controller.
-    }
-    */
-
+  }
+  
+  /*
+   // MARK: - Navigation
+   
+   // In a storyboard-based application, you will often want to do a little preparation before navigation
+   override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+   // Get the new view controller using segue.destinationViewController.
+   // Pass the selected object to the new view controller.
+   }
+   */
+  
 }

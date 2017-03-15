@@ -22,21 +22,21 @@ class PhotoCollectionViewCell: UICollectionViewCell {
             updateUI()
         }
     }
-    
+  
+  
     @IBOutlet weak var imageView: UIImageView!
     @IBOutlet weak var indicator: UIActivityIndicatorView!
     
     func updateUI() {
-        if let image = photo?.image {
+        if let imageData = photo?.image {
           indicator.stopAnimating()
-          indicator.isHidden = true
+          let image = UIImage(data: imageData)
           imageView.image = image
           imageView.isHidden = false
         }
         else {
           imageView.image = nil
           imageView.isHidden = true
-          indicator.isHidden = false
           indicator.startAnimating()
         }
     }

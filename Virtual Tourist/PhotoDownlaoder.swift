@@ -28,9 +28,10 @@ class PhotoDownlaoder: NSObject {
     let searchString = "&lat=\(pin.latitude)&lon=\(pin.longitude)"
     let format = "&format=json"
     let page = "&page=\(pin.page)"
+    let per_page = "&per_page=\(20)"
     
     let session = URLSession.shared
-    let url = URL(string: baseURL + apiString + searchString + format + page)
+    let url = URL(string: baseURL + apiString + searchString + format + page + per_page)
     
     let task = session.dataTask(with: url!) { (data, response, error) in
       
@@ -60,41 +61,40 @@ class PhotoDownlaoder: NSObject {
         let page = (root["page"] as? Int16) ?? 1
         let pages = (root["pages"] as? Int16) ?? 1
         
-        for photoJson in photosJson {
-          let photo = NSEntityDescription.insertNewObject(forEntityName: "Photo", into: managedContext) as! Photo
+        DispatchQueue.main.async {
           
-          //https://farm{farm-id}.staticflickr.com/{server-id}/{id}_{secret}.jpg
-          let farm_id = photoJson["farm"] as! Int
-          let server_id = photoJson["server"] as! String
-          let id = photoJson["id"] as! String
-          let secret = photoJson["secret"] as! String
-          
-          let stringUrlPhoto = "https://farm\(farm_id).staticflickr.com/\(server_id)/\(id)_\(secret).jpg"
-          
-          photo.url = stringUrlPhoto
-          photo.startDownloadPhoto() { o in
-            if o.image != nil {
-              let managedContext = appDelegate.persistentContainer.viewContext
-              do {
-                try managedContext.save()
-              } catch let error as NSError {
-                print("Could not save. \(error), \(error.userInfo)")
-              }
-              
+          for photoJson in photosJson {
+            
+            let photo = NSEntityDescription.insertNewObject(forEntityName: "Photo", into: managedContext) as! Photo
+            
+            //https://farm{farm-id}.staticflickr.com/{server-id}/{id}_{secret}.jpg
+            let farm_id = photoJson["farm"] as! Int
+            let server_id = photoJson["server"] as! String
+            let id = photoJson["id"] as! String
+            let secret = photoJson["secret"] as! String
+            
+            let stringUrlPhoto = "https://farm\(farm_id).staticflickr.com/\(server_id)/\(id)_\(secret).jpg"
+            
+            photo.url = stringUrlPhoto
+            photo.startDownloadPhoto() { photo in
+              photo.photoProtocol?.downloadFinished(photo: photo)
             }
+            pin.addToPhotos(photo)
+            
           }
-          photo.pin = pin
-          pin.addToPhotos(photo)
+        
+          pin.page = (page+1 > pages) ? 1 : page+1
+          pin.pages = pages
+          
+          do {
+            try managedContext.save()
+          } catch let error as NSError {
+            print("Could not save. \(error), \(error.userInfo)")
+          }
         }
         
-        pin.page = (page+1 > pages) ? 1 : page+1
-        pin.pages = pages
         
-        do {
-          try managedContext.save()
-        } catch let error as NSError {
-          print("Could not save. \(error), \(error.userInfo)")
-        }
+        
         
         
         
